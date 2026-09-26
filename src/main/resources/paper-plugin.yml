@@ -1,0 +1,41 @@
+name: inmc-economy
+version: '${version}'
+main: com.inmc.economy.EconomyPlugin
+api-version: '${apiVersion}'   # build.gradle.kts 의 inmc { paper } 에서 유도됨
+description: INMC 화폐 - 여러 화폐·실물 화폐·통합/서버별·수표. Vault 를 대신한다
+authors: [ INMC ]
+
+# Vault 를 따로 넣지 않아도 된다 — 이 플러그인이 Vault API 를 그대로 들고 "Vault" 로 보인다.
+# 진짜 Vault 와 같이 넣지 마세요. 이름이 겹쳐 둘 중 하나가 켜지지 않습니다.
+provides: [ Vault ]
+
+# 연동은 전부 load: OMIT 이다. BEFORE 를 걸면 Paper 가 의존성 순환을 보고 우리 간선을
+# 조용히 끊는다 (가이드 함정 1).
+dependencies:
+  server:
+    # 필수 의존은 이것 하나뿐. core 가 kotlin-stdlib 과 공용 프레임워크를 들고 있다.
+    inmc-core:      { load: BEFORE, required: true,  join-classpath: true }
+    PlaceholderAPI: { load: OMIT,   required: false, join-classpath: true }
+
+# commands 절은 paper-plugin.yml 에 없다 - Brigadier 로 등록한다.
+permissions:
+  inmceconomy.use:
+    description: /돈 — 지갑·순위·입금·출금
+    default: true
+  inmceconomy.pay:
+    description: /돈 보내기 — 다른 사람에게 송금(화폐마다 송금 허용을 따로 켠다)
+    default: true
+  inmceconomy.cheque:
+    description: 수표 발행과 쓰기. 기본은 관리자만 — 유저에게 열려면 이 권한을 주세요
+    default: op
+  inmceconomy.see.others:
+    description: /돈 보기 <플레이어> — 남의 잔고 보기
+    default: op
+  inmceconomy.admin:
+    description: 화폐 관리 전체 (지급·차감·설정·화폐 편집·거래 기록·리로드)
+    default: op
+    children:
+      inmceconomy.use: true
+      inmceconomy.pay: true
+      inmceconomy.cheque: true
+      inmceconomy.see.others: true

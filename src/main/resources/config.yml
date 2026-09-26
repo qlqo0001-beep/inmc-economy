@@ -1,0 +1,28 @@
+# ============================================================
+#  inmc-economy
+# ============================================================
+#  화폐 정의는 currencies.yml (GUI: /돈 관리). 여기는 저장소와 수표 모양.
+#  Vault 를 따로 넣지 마세요 — 이 플러그인이 Vault 입니다.
+# ============================================================
+
+# 이 서버의 이름. 거래 기록에 남습니다 — 여러 서버가 한 DB 를 쓸 때 어디서 일어났는지.
+server-name: 'main'
+
+# 통합 화폐(scope: network)가 쓸 공용 DB. 여러 서버가 같은 잔고를 보려면 모두 같은 DB 를 적습니다.
+# 비워 두면 이 서버의 SQLite(economy.db)를 씁니다 — 서버가 하나일 때.
+# 예: jdbc:mysql://127.0.0.1:3306/inmc  (MySQL·MariaDB 둘 다 됩니다)
+network:
+  url: ''
+  user: ''
+  password: ''
+  # 다른 서버가 바꾼 잔고를 몇 초마다 읽어 올지.
+  refresh-seconds: 10
+
+# 수표 아이템의 모양. 권한 inmceconomy.cheque (기본: 관리자만) 와 화폐의 cheque: true 가 둘 다 있어야 씁니다.
+cheque:
+  material: PAPER
+  custom-model-data: 0
+
+rank:
+  # 순위를 몇 초마다 다시 셀지.
+  refresh-seconds: 30
