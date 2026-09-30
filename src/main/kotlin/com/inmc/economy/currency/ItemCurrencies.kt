@@ -32,14 +32,15 @@ class ItemCurrencies(private val eco: Eco) {
     private fun matches(stack: org.bukkit.inventory.ItemStack?, spec: StoredItem, old: StoredItem?): Boolean =
         eco.matcher.matches(stack, spec) || (old != null && eco.matcher.matches(stack, old))
 
-    /** 가방 속 개수. 접속하지 않았으면 0, 다른 스레드면 마지막으로 센 값. */
+    /** 가방 속 개수 — 배낭(core CarriedStorage, 2026-09-30)까지. 접속하지 않았으면 0, 다른 스레드면 마지막으로 센 값. */
     fun count(player: OfflinePlayer, def: CurrencyDef): Long {
         val online = player.player ?: return 0
         val key = online.uniqueId.toString() + "|" + def.id
         if (!owned(online)) return lastCount[key] ?: 0
         val spec = def.item ?: return 0
         val old = legacy[def.id]
-        val counted = online.inventory.storageContents.sumOf { if (matches(it, spec, old)) it!!.amount.toLong() else 0L }
+        val counted = online.inventory.storageContents.sumOf { if (matches(it, spec, old)) it!!.amount.toLong() else 0L } +
+            kr.inmc.core.integration.CarriedStorage.count(online) { matches(it, spec, old) }
         lastCount[key] = counted
         return counted
     }
@@ -155,6 +156,8 @@ class ItemCurrencies(private val eco: Eco) {
             // 돌려받은 것이 복제본일 수 있어 줄인 것을 다시 넣는다.
             if (taken >= stack.amount) inventory.setItem(slot, null) else inventory.setItem(slot, stack.also { it.amount -= taken })
         }
+        // 가방에서 모자라면 배낭에서(가방 먼저).
+        if (left > 0) kr.inmc.core.integration.CarriedStorage.take(player, left.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()) { matches(it, spec, old) }
     }
 
     /** 가방 속 개수형은 장부가 없어 기록만. */
