@@ -43,6 +43,9 @@ class CurrencyListMenu(eco: Eco, private val viewer: Player) : Menu(eco, SIZE, T
             "<gray>잔고 보기·지급·차감·설정, 거래 기록.</gray>", "", "<yellow>▶ 클릭: 이름 입력</yellow>",
         ))) { findPlayer() }
         set(Paging.SLOT_BACK, Icon.back()) { WalletMenu(eco, viewer).open(viewer) }
+        set(SLOT_HUB, Icon.of(Material.COMPASS, "<gold>어드민 메뉴로</gold>", "<gray>각 플러그인 설정 허브로 돌아갑니다.</gray>")) {
+            viewer.performCommand("메뉴 어드민")
+        }
         set(Paging.SLOT_CLOSE, Icon.close()) { viewer.closeInventory() }
     }
 
@@ -77,6 +80,7 @@ class CurrencyListMenu(eco: Eco, private val viewer: Player) : Menu(eco, SIZE, T
         const val SIZE = 54
         const val SLOT_CREATE = 48
         const val SLOT_PLAYER = 50
+        const val SLOT_HUB = 52
     }
 }
 
