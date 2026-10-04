@@ -15,6 +15,10 @@ data class EconomyConfig(
     val chequeMaterial: Material = Material.PAPER,
     val chequeModel: Int = 0,
     val rankRefreshSeconds: Int = 30,
+    /** 송금·수표 발행에 붙는 수수료. 끄면 0원이다. */
+    val feeEnabled: Boolean = true,
+    /** 켜져 있을 때의 기본 비율(%). 올림 계산이라 1원에도 1원이 붙는다. */
+    val feePercent: Double = 5.0,
 ) {
     companion object {
         fun from(config: YamlConfiguration): EconomyConfig = EconomyConfig(
@@ -26,6 +30,20 @@ data class EconomyConfig(
             chequeMaterial = config.getString("cheque.material")?.let { Material.matchMaterial(it) } ?: Material.PAPER,
             chequeModel = config.getInt("cheque.custom-model-data", 0).coerceAtLeast(0),
             rankRefreshSeconds = config.getInt("rank.refresh-seconds", 30).coerceIn(5, 3600),
+            feeEnabled = config.getBoolean("fees.enabled", true),
+            feePercent = config.getDouble("fees.percent", 5.0).coerceIn(0.0, 100.0),
         )
+
+        /**
+         * 수수료(원). 꺼져 있거나 비율이 0 이하면 0원. 올림이라 소액도 최소 1원이다.
+         * 서버 없이 돈다.
+         */
+        fun feeFor(amount: Long, enabled: Boolean, percent: Double): Long {
+            if (!enabled || percent <= 0.0 || amount <= 0L) return 0L
+            return kotlin.math.ceil(amount * percent / 100.0).toLong().coerceAtLeast(1L)
+        }
     }
+
+    /** 이 금액에 붙는 수수료. */
+    fun feeFor(amount: Long): Long = feeFor(amount, feeEnabled, feePercent)
 }

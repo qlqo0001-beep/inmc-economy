@@ -23,6 +23,13 @@ cheque:
   material: PAPER
   custom-model-data: 0
 
+# 송금(/돈 보내기)과 수표 발행에 붙는 수수료. 받는 사람은 온전히 받고, 보내는 사람이 더 낸다.
+fees:
+  # false 면 수수료 없음.
+  enabled: true
+  # 기본 비율(%). 올림 계산이라 1원을 보내도 1원이 붙는다.
+  percent: 5.0
+
 rank:
   # 순위를 몇 초마다 다시 셀지.
   refresh-seconds: 30

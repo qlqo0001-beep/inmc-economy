@@ -72,21 +72,25 @@ class EconomyCommand(private val eco: Eco, private val plugin: EconomyPlugin) {
             .requires { it.sender.hasPermission(USE) }
             .executes { ctx ->
                 val player = ctx.source.executor as? Player ?: ctx.source.sender as? Player
-                if (player == null) usage(sender(ctx)) else WalletMenu(eco, player).open(player)
+                if (player == null) usage(sender(ctx)) else show(sender(ctx), player.uniqueId)
                 1
             }
+            // 주의: 이 인자는 리터럴들보다 먼저 둔다. Brigadier 는 같은 입력에 맞는 자식이 여럿이면
+            // 마지막에 맞은 것을 쓰므로, 뒤의 리터럴(메뉴·보내기…)이 플레이어 이름보다 우선한다.
+            // 순서를 바꾸면 `/돈 메뉴` 가 "메뉴"라는 플레이어를 찾게 된다.
+            .then(Commands.argument("플레이어", StringArgumentType.word()).suggests(players)
+                .requires { it.sender.hasPermission(SEE_OTHERS) }
+                .executes { ctx ->
+                    val name = StringArgumentType.getString(ctx, "플레이어")
+                    eco.findPlayer(name)?.let { show(sender(ctx), it) } ?: eco.messages.send(sender(ctx), "player-not-found", Ph.of().player(name))
+                    1
+                })
             .then(Commands.literal("도움말").executes { ctx -> usage(sender(ctx)); 1 })
-            .then(
-                Commands.literal("보기")
-                    .executes { ctx -> player(ctx)?.let { show(sender(ctx), it.uniqueId) }; 1 }
-                    .then(Commands.argument("플레이어", StringArgumentType.word()).suggests(players)
-                        .requires { it.sender.hasPermission(SEE_OTHERS) }
-                        .executes { ctx ->
-                            val name = StringArgumentType.getString(ctx, "플레이어")
-                            eco.findPlayer(name)?.let { show(sender(ctx), it) } ?: eco.messages.send(sender(ctx), "player-not-found", Ph.of().player(name))
-                            1
-                        }),
-            )
+            .then(Commands.literal("메뉴").executes { ctx ->
+                val player = ctx.source.executor as? Player ?: ctx.source.sender as? Player
+                if (player == null) usage(sender(ctx)) else WalletMenu(eco, player).open(player)
+                1
+            })
             .then(
                 Commands.literal("보내기").requires { it.sender.hasPermission(PAY) }
                     .then(Commands.argument("플레이어", StringArgumentType.word()).suggests(players).amountThenCurrency { ctx ->

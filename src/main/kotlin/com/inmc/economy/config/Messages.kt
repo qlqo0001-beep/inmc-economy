@@ -42,6 +42,7 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
             "pay-over-max" to "<red>{player} 의 {currency}<red> 이(가) 최대 금액을 넘어 보낼 수 없습니다.</red>",
             "paid" to "<green>{player} 에게 {currency}<green> <white>{amount}</white> 을(를) 보냈습니다. 남은 잔고 <white>{balance}</white></green>",
             "received" to "<green>{player} 에게서 {currency}<green> <white>{amount}</white> 을(를) 받았습니다. 잔고 <white>{balance}</white></green>",
+            "fee-charged" to "<gray>수수료 <white>{amount}</white> {currency}<gray> 이(가) 붙었습니다.</gray>",
 
             // --- 관리자 -------------------------------------------------------------
             "admin-done" to "<green>{player} · {currency}<green> <white>{amount}</white> {value} 완료. 잔고 <white>{balance}</white></green>",
@@ -65,12 +66,12 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
 
             // --- 도움말 -------------------------------------------------------------
             "help" to listOf(
-                "<gold>/돈</gold> <gray>- 내 지갑</gray>",
-                "<gold>/돈 보기 [플레이어]</gold> <gray>- 잔고</gray>",
-                "<gold>/돈 보내기 <플레이어> <금액> [화폐]</gold> <gray>- 송금</gray>",
+                "<gold>/돈 [플레이어]</gold> <gray>- 잔고 (채팅)</gray>",
+                "<gold>/돈 메뉴</gold> <gray>- 내 지갑</gray>",
+                "<gold>/돈 보내기 <플레이어> <금액> [화폐]</gold> <gray>- 송금 (수수료 별도)</gray>",
                 "<gold>/돈 순위 [화폐]</gold>",
                 "<gold>/돈 입금 <화폐> [수량]</gold> <gray>· </gray><gold>/돈 출금 <화폐> <수량></gold> <gray>- 은행형 실물 화폐</gray>",
-                "<gold>/돈 수표 <금액> [화폐]</gold>",
+                "<gold>/돈 수표 <금액> [화폐]</gold> <gray>- 수표 발행 (수수료 별도)</gray>",
                 "<red>/돈 지급·차감·설정 <플레이어> <금액> [화폐]</red> <gray>· </gray><red>/돈 관리</red> <gray>· </gray><red>/돈 리로드</red>",
             ).joinToString("\n"),
 
