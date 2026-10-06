@@ -21,18 +21,23 @@ class Transfers(private val eco: Eco) {
             !def.transferable || def.inventory -> return false.also { eco.messages.send(from, "pay-not-allowed", ph) }
             to == from.uniqueId -> return false.also { eco.messages.send(from, "pay-self") }
         }
+        // 수수료는 보내는 사람이 더 낸다. 받는 사람은 온전히 받는다.
+        val fee = eco.config.feeFor(amount)
+        val total = amount + fee
         val fromName = from.name
         val toName = eco.nameOf(to)
         val done = eco.accounts.transact(listOf(
-            Accounts.Op(from.uniqueId, def, -amount, "pay:to:$toName"),
+            Accounts.Op(from.uniqueId, def, -total, "pay:to:$toName"),
             Accounts.Op(to, def, amount, "pay:from:$fromName"),
         ))
         if (done == null) {
-            val short = eco.accounts.balance(from.uniqueId, def) < amount
-            eco.messages.send(from, if (short) "not-enough" else "pay-over-max", ph)
+            val short = eco.accounts.balance(from.uniqueId, def) < total
+            val need = Ph.of().currency(def.name).amount(def.format(total)).player(eco.nameOf(to))
+            eco.messages.send(from, if (short) "not-enough" else "pay-over-max", need)
             return false
         }
         eco.messages.send(from, "paid", ph.copy().balance(def.format(done[0])))
+        if (fee > 0) eco.messages.send(from, "fee-charged", Ph.of().currency(def.name).amount(def.format(fee)))
         Bukkit.getPlayer(to)?.let { eco.messages.send(it, "received", Ph.of().currency(def.name).amount(def.format(amount)).player(fromName).balance(def.format(done[1]))) }
         return true
     }

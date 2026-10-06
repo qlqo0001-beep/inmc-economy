@@ -35,9 +35,12 @@ class ChequeService(private val eco: Eco) {
             return false
         }
         if (amount <= 0) return false
+        // 수표 액면은 그대로, 수수료는 더 낸다.
+        val fee = eco.config.feeFor(amount)
+        val total = amount + fee
         val id = UUID.randomUUID()
-        if (eco.accounts.add(player.uniqueId, def, -amount, "cheque:issue:$id") == null) {
-            eco.messages.send(player, "not-enough", Ph.of().currency(def.name).amount(def.format(amount)))
+        if (eco.accounts.add(player.uniqueId, def, -total, "cheque:issue:$id") == null) {
+            eco.messages.send(player, "not-enough", Ph.of().currency(def.name).amount(def.format(total)))
             return false
         }
         val cheque = Cheque(id, def.id, amount, player.uniqueId, System.currentTimeMillis())
@@ -49,13 +52,14 @@ class ChequeService(private val eco: Eco) {
                 if (ok) {
                     for (left in player.inventory.addItem(item(def, cheque)).values) player.world.dropItemNaturally(player.location, left)
                     eco.messages.send(player, "cheque-issued", Ph.of().currency(def.name).amount(def.format(amount)))
+                    if (fee > 0) eco.messages.send(player, "fee-charged", Ph.of().currency(def.name).amount(def.format(fee)))
                 } else {
-                    eco.accounts.add(player.uniqueId, def, amount, "cheque:refund:$id")
+                    eco.accounts.add(player.uniqueId, def, total, "cheque:refund:$id")
                     eco.messages.send(player, "cheque-failed")
                 }
             }, {
                 // 그 사이 나갔다. 기록이 됐으면 돈을 돌려준다 — 아이템을 줄 수 없으니 수표는 쓸 수 없는 채로 남는다.
-                eco.accounts.add(player.uniqueId, def, amount, "cheque:refund:$id")
+                eco.accounts.add(player.uniqueId, def, total, "cheque:refund:$id")
             })
         }
         return true
