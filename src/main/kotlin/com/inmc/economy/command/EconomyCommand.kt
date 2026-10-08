@@ -138,7 +138,13 @@ class EconomyCommand(private val eco: Eco, private val plugin: EconomyPlugin) {
                 Commands.literal("관리").requires { it.sender.hasPermission(ADMIN) }.executes { ctx ->
                     player(ctx)?.let { CurrencyListMenu(eco, it).open(it) }
                     1
-                },
+                }.then(
+                    // 서버 안 자동 검증(2026-10-08) — 장부·다리·수표 아이템·화면.
+                    Commands.literal("검증").executes { ctx ->
+                        player(ctx)?.let { com.inmc.economy.verify.Verifier(eco).run(it) }
+                        1
+                    },
+                ),
             )
             .then(
                 Commands.literal("리로드").requires { it.sender.hasPermission(ADMIN) }.executes { ctx ->
@@ -203,6 +209,8 @@ class EconomyCommand(private val eco: Eco, private val plugin: EconomyPlugin) {
 
     private fun usage(to: CommandSender) {
         eco.messages.sendRaw(to, eco.messages.raw("help"))
+        // 관리자 줄은 권한이 있을 때만(2026-10-08).
+        if (to.hasPermission(ADMIN)) eco.messages.sendRaw(to, eco.messages.raw("help-admin"))
     }
 
     companion object {

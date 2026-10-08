@@ -29,6 +29,10 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
             "not-enough" to "<red>{currency}<red> 이(가) 모자랍니다. 필요: <white>{amount}</white></red>",
             "over-max" to "<red>{currency}<red> 의 최대 금액을 넘습니다.</red>",
             "reloaded" to "<green>설정을 다시 불러왔습니다. 화폐 {count}개.</green>",
+            "verify-done" to "<gold>화폐 검증</gold> <gray>— 통과 <green>{amount}</green> · 실패 <red>{count}</red>{value}</gray>",
+            "verify-failure" to "<red> ✘ {value}</red>",
+            "verify-skipped" to "<gray> – {value}</gray>",
+            "verify-report" to "<gray>결과 파일: <white>{value}</white></gray>",
 
             // --- 잔고 ---------------------------------------------------------------
             "balance-header" to "<gold>{player} 의 잔고</gold>",
@@ -72,6 +76,9 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
                 "<gold>/돈 순위 [화폐]</gold>",
                 "<gold>/돈 입금 <화폐> [수량]</gold> <gray>· </gray><gold>/돈 출금 <화폐> <수량></gold> <gray>- 은행형 실물 화폐</gray>",
                 "<gold>/돈 수표 <금액> [화폐]</gold> <gray>- 수표 발행 (수수료 별도)</gray>",
+            ).joinToString("\n"),
+            // 관리자 줄은 권한이 있을 때만(2026-10-08).
+            "help-admin" to listOf(
                 "<red>/돈 지급·차감·설정 <플레이어> <금액> [화폐]</red> <gray>· </gray><red>/돈 관리</red> <gray>· </gray><red>/돈 리로드</red>",
             ).joinToString("\n"),
 
