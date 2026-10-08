@@ -2,8 +2,8 @@ package com.inmc.economy.verify
 
 import com.inmc.economy.Eco
 import com.inmc.economy.currency.CurrencyDef
-import com.inmc.economy.currency.CurrencyDef.ItemMode
-import com.inmc.economy.currency.CurrencyDef.Kind
+import com.inmc.economy.currency.ItemMode
+import com.inmc.economy.currency.Kind
 import com.inmc.economy.gui.CurrencyListMenu
 import com.inmc.economy.gui.WalletMenu
 import com.inmc.economy.store.Accounts
@@ -152,8 +152,13 @@ class Verifier(private val eco: Eco) {
             },
             Check("PAPI — %inmceco_balance% 가 값을 준다") { s ->
                 if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) return@Check "$SKIP PlaceholderAPI 가 없습니다"
-                val value = s.eco.papi.onRequest(s.player, "balance")
-                ok(!value.isNullOrBlank(), "balance 가 비었습니다")
+                // PAPI 클래스는 리플렉션으로 — 없는 서버에서 이 검사 목록이 적재될 때 터지지 않게.
+                val value = runCatching {
+                    Class.forName("me.clip.placeholderapi.PlaceholderAPI")
+                        .getMethod("setPlaceholders", org.bukkit.OfflinePlayer::class.java, String::class.java)
+                        .invoke(null, s.player, "%inmceco_balance%") as? String
+                }.getOrNull()
+                ok(!value.isNullOrBlank() && !value.contains("%inmceco_balance%"), "balance 가 풀리지 않았습니다: $value")
             },
             Check("지갑·화폐 관리 화면이 열린다") { s ->
                 WalletMenu(s.eco, s.player).open(s.player)
