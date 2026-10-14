@@ -8,7 +8,7 @@ import org.bukkit.Material
 /**
  * 화폐가 커스텀아이템에 내놓는 역할(core [ItemRoles]) — **실물 화폐**(값: 어느 화폐인지)와 **수표 모양**.
  *
- * 커스텀아이템이 있으면 실물 화폐의 아이템은 그 역할을 맡은 커스텀아이템이다([sync]). 화폐 설정 화면에서 손에 든 것으로 정해도
+ * 커스텀아이템이 있으면 실물 화폐의 아이템은 그 역할을 맡은 커스텀아이템이다([sync]). 화폐 설정 화면에서 아이템을 올려 정해도
  * 커스텀아이템의 역할에서 정해도 같다. **바닐라 그대로인 화폐(에메랄드)는 옮기지 않는다** — 커스텀아이템으로 바꾸면 주민 거래에 쓰는
  * 평범한 에메랄드와 갈라진다. 옮긴 화폐도 이미 나가 있는 옛 아이템은 계속 센다(legacy).
  */
@@ -34,15 +34,15 @@ object EconomyRoles {
     private fun ours(ref: ItemRef?) = (ref as? ItemRef.Namespaced)?.namespace.equals("inmc", ignoreCase = true)
 
     /**
-     * 화폐 설정 화면에서 손에 든 것을 실물로 — 바닐라가 아니면 커스텀아이템으로 만들어(이미 그렇다면 그대로) 역할을 붙이고 이 화폐의
+     * 화폐 설정 화면에 올린 것을 실물로 — 바닐라가 아니면 커스텀아이템으로 만들어(이미 그렇다면 그대로) 역할을 붙이고 이 화폐의
      * 역할을 맡던 다른 아이템에서는 뗀다. 바닐라면 역할을 다 떼고 false(부르는 쪽이 화폐에 그대로 적는다).
      */
-    fun set(eco: Eco, def: CurrencyDef, hand: org.bukkit.inventory.ItemStack): Boolean {
+    fun set(eco: Eco, def: CurrencyDef, stack: org.bukkit.inventory.ItemStack): Boolean {
         if (!ItemRoles.active) return false
         for (holder in ItemRoles.holders(CURRENCY)) if (holder.values["currency"] == def.id) ItemRoles.assign(holder.ref, CURRENCY, null)
-        val captured = eco.resolver.capture(hand)
+        val captured = eco.resolver.capture(stack)
         if (captured.ref is ItemRef.Vanilla) return false
-        val ref = ItemRoles.adopt(hand, def.id) ?: return false
+        val ref = ItemRoles.adopt(stack, def.id) ?: return false
         ItemRoles.assign(ref, CURRENCY, ItemRoles.withLegacy(mapOf("currency" to def.id), captured))
         return true
     }

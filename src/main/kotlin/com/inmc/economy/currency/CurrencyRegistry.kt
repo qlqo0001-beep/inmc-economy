@@ -19,10 +19,10 @@ class CurrencyRegistry(io: ConfigService) : YamlFileStore(
         id(맨 앞 이름)  영문 소문자·숫자·밑줄 — 명령어에 씁니다. 바꾸면 잔고가 따라가지 않습니다
         name   보이는 이름(MiniMessage)
         unit   금액 뒤에 붙는 글자 — 1,000원
-        icon   화면 아이콘(재질). icon-item 은 GUI 에서 손에 든 것으로 정한 모양(모델 번호·커스텀아이템 그대로)
+        icon   화면 아이콘(재질). icon-item 은 GUI 에서 아이템을 올려 정한 모양(모델 번호·커스텀아이템 그대로)
         kind   virtual(숫자만) / item(실물 아이템)
         mode   item 일 때 — inventory(가방에 든 개수가 곧 잔고) / bank(잔고는 숫자, 아이템으로 입금·출금)
-        item   item 일 때의 아이템. GUI 에서 손에 든 것으로 정합니다(모델 번호·커스텀아이템 그대로)
+        item   item 일 때의 아이템. GUI 에서 아이템을 올려 정합니다(모델 번호·커스텀아이템 그대로)
         scope  server(이 서버에서만) / network(여러 서버가 같은 잔고 — config.yml 의 network DB)
         default  기본 화폐 — 금액만 적힌 보상·가격과 Vault 가 씁니다. 하나만
         start  처음 받는 금액   max  최대 금액(0 이면 없음)

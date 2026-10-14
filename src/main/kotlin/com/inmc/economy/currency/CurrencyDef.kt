@@ -69,7 +69,7 @@ data class CurrencyDef(
     val transferable: Boolean = true,
     val ranked: Boolean = true,
     val cheque: Boolean = false,
-    /** 손에 든 것으로 정한 아이콘 — 모델(번호·item_model)·커스텀아이템 모양까지. 없으면 [icon] 재질. */
+    /** GUI 에 올린 아이템으로 정한 아이콘 — 모델(번호·item_model)·커스텀아이템 모양까지. 없으면 [icon] 재질. */
     val iconItem: StoredItem? = null,
 ) {
     /** 가방 속 개수가 잔고인 실물 화폐. 장부가 없다. */

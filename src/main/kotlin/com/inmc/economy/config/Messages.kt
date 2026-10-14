@@ -24,7 +24,6 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
             "invalid-amount" to "<red>금액은 1 이상의 정수로 적어주세요.</red>",
             "invalid-id" to "<red>화폐 id 는 영문 소문자·숫자·밑줄만 됩니다: {value}</red>",
             "already-exists" to "<red>'{value}' 은(는) 이미 있습니다.</red>",
-            "hand-empty" to "<red>손에 아이템을 들고 있어야 합니다.</red>",
             "no-permission" to "<red>권한이 없습니다.</red>",
             "not-enough" to "<red>{currency}<red> 이(가) 모자랍니다. 필요: <white>{amount}</white></red>",
             "over-max" to "<red>{currency}<red> 의 최대 금액을 넘습니다.</red>",
@@ -58,8 +57,8 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
             "bank-nothing" to "<yellow>입금할 {currency}<yellow> 이(가) 가방에 없거나 최대 금액입니다.</yellow>",
             "bank-withdrew" to "<green>{currency}<green> <white>{amount}</white> 을(를) 꺼냈습니다. 잔고 <white>{balance}</white></green>",
             "not-bank" to "<red>{currency}<red> 은(는) 은행형 실물 화폐가 아닙니다.</red>",
-            "overflow-mailed" to "<yellow>가방이 차서 들어가지 않은 {currency}<yellow> 은(는) 우편으로 보냈습니다. /우편 에서 받으세요.</yellow>",
             "pending-delivered" to "<green>접속하지 않은 동안 받은 {currency}<green> <white>{amount}</white> 을(를) 가방에 넣었습니다.</green>",
+            "overflow-mailed" to "<yellow>가방이 차서 들어가지 않은 {currency}<yellow> 은(는) 우편으로 보냈습니다. /우편 에서 받으세요.</yellow>",
 
             // --- 수표 ---------------------------------------------------------------
             "cheque-not-allowed" to "<red>{currency}<red> 은(는) 수표로 꺼낼 수 없는 화폐입니다.</red>",

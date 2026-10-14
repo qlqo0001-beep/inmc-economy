@@ -11,6 +11,7 @@ import com.inmc.economy.util.Ph
 import kr.inmc.core.gui.ConfirmMenu
 import kr.inmc.core.gui.Editors
 import kr.inmc.core.gui.Icon
+import kr.inmc.core.gui.ItemInputMenu
 import kr.inmc.core.gui.Paging
 import kr.inmc.core.util.Text
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -117,13 +118,14 @@ class CurrencyEditMenu(eco: Eco, private val viewer: Player, private val id: Str
         }
         set(SLOT_ICON, Icon.relabel(plainIcon(def), "<yellow>아이콘: <white>" + (def.iconItem?.label() ?: def.icon.name) + "</white></yellow>", listOf(
             "<gray>화면에 보이는 모양(가상 화폐).</gray>", "<dark_gray>모델 번호·커스텀아이템 모양 그대로 됩니다.</dark_gray>", "",
-            "<yellow>▶ 좌클릭: 손에 든 것으로 바꾸기</yellow>", "<yellow>▶ 우클릭: 기본 모양으로</yellow>",
+            "<yellow>▶ 좌클릭: 아이템을 올려 바꾸기</yellow>", "<yellow>▶ 우클릭: 기본 모양으로</yellow>",
         ))) { event ->
             if (event.isRightClick) return@set change { it.copy(icon = Material.GOLD_NUGGET, iconItem = null) }
-            val hand = viewer.inventory.itemInMainHand
-            if (hand.type.isAir) return@set eco.messages.send(viewer, "hand-empty")
-            val item = if (eco.resolver.isPlainVanilla(hand)) null else eco.resolver.capture(hand)
-            change { it.copy(icon = hand.type, iconItem = item) }
+            ItemInputMenu(eco, viewer, "화폐 아이콘", listOf("<gray>화면에 보이는 모양(가상 화폐).</gray>", "<dark_gray>모델 번호·커스텀아이템 모양 그대로 됩니다.</dark_gray>"), back = { open(viewer) }) { stack ->
+                val item = if (eco.resolver.isPlainVanilla(stack)) null else eco.resolver.capture(stack)
+                change { it.copy(icon = stack.type, iconItem = item) }
+                open(viewer)
+            }.show()
         }
         set(SLOT_KIND, Icon.of(if (def.kind == Kind.ITEM) Material.EMERALD else Material.PAPER, "<yellow>종류: <white>" + def.kind.display + "</white></yellow>",
             Editors.optionList(Kind.entries.toList(), def.kind) { it.display } + listOf("", "<gray>가상은 숫자만, 실물은 아이템.</gray>") + Editors.cycleHint)) { event ->
@@ -137,12 +139,13 @@ class CurrencyEditMenu(eco: Eco, private val viewer: Player, private val id: Str
                 ) + Editors.cycleHint)) { event ->
                 change { it.copy(mode = Editors.cycle(event, ItemMode.entries.toList(), it.mode)).let(::keepDefaultValid) }
             }
-            set(SLOT_ITEM, def.item?.let { eco.resolver.create(it, 1) }?.let { Icon.annotate(it, null, listOf("", "<yellow>▶ 클릭: 손에 든 것으로 바꾸기</yellow>", "<dark_gray>모델 번호·커스텀아이템 그대로 알아봅니다.</dark_gray>")) }
-                ?: Icon.of(Material.BARRIER, "<red>아이템 없음</red>", listOf("<gray>화폐로 쓸 아이템을 손에 들고 누르세요.</gray>", "<dark_gray>에메랄드·모델 번호 붙은 아이템·커스텀아이템 전부 됩니다.</dark_gray>"))) {
-                val hand = viewer.inventory.itemInMainHand
-                if (hand.type.isAir) return@set eco.messages.send(viewer, "hand-empty")
-                // 커스텀아이템이 있으면 그리로(바닐라 그대로인 것은 제외) — 커스텀아이템의 "실물 화폐" 역할에서도 보인다.
-                if (com.inmc.economy.currency.EconomyRoles.set(eco, def, hand)) refresh() else change { it.copy(item = eco.resolver.capture(hand)) }
+            set(SLOT_ITEM, def.item?.let { eco.resolver.create(it, 1) }?.let { Icon.annotate(it, null, listOf("", "<yellow>▶ 클릭: 아이템을 올려 바꾸기</yellow>", "<dark_gray>모델 번호·커스텀아이템 그대로 알아봅니다.</dark_gray>")) }
+                ?: Icon.of(Material.BARRIER, "<red>아이템 없음</red>", listOf("<gray>눌러서 화폐로 쓸 아이템을 올리세요.</gray>", "<dark_gray>에메랄드·모델 번호 붙은 아이템·커스텀아이템 전부 됩니다.</dark_gray>"))) {
+                ItemInputMenu(eco, viewer, "실물 화폐 아이템", listOf("<gray>화폐로 쓸 아이템.</gray>", "<dark_gray>에메랄드·모델 번호 붙은 아이템·커스텀아이템 전부 됩니다.</dark_gray>"), back = { open(viewer) }) { stack ->
+                    // 커스텀아이템이 있으면 그리로(바닐라 그대로인 것은 제외) — 커스텀아이템의 "실물 화폐" 역할에서도 보인다.
+                    if (!com.inmc.economy.currency.EconomyRoles.set(eco, def, stack)) change { it.copy(item = eco.resolver.capture(stack)) }
+                    open(viewer)
+                }.show()
             }
         }
         set(SLOT_SCOPE, Icon.of(if (def.scope == Scope.NETWORK) Material.ENDER_EYE else Material.GRASS_BLOCK, "<yellow>범위: <white>" + def.scope.display + "</white></yellow>",

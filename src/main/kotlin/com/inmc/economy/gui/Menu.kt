@@ -14,7 +14,7 @@ abstract class Menu(protected val eco: Eco, size: Int, title: Component) : kr.in
 
     override val owner: Any get() = eco
 
-    /** 화폐의 아이콘 — 실물 화폐면 그 아이템 그대로(모델 번호까지), 아니면 정한 아이콘(손에 든 것의 모양 또는 재질). */
+    /** 화폐의 아이콘 — 실물 화폐면 그 아이템 그대로(모델 번호까지), 아니면 정한 아이콘(올린 아이템의 모양 또는 재질). */
     protected fun iconOf(def: CurrencyDef): ItemStack =
         def.item?.takeIf { def.kind == com.inmc.economy.currency.Kind.ITEM }?.let { eco.resolver.create(it, 1) } ?: plainIcon(def)
 
