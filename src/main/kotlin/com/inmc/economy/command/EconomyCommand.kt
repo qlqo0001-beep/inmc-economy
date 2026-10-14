@@ -17,6 +17,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
+import kr.inmc.core.integration.Vanish
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -35,8 +36,9 @@ class EconomyCommand(private val eco: Eco, private val plugin: EconomyPlugin) {
         }
     }
 
-    private val players = SuggestionProvider<CommandSourceStack> { _, builder ->
-        Bukkit.getOnlinePlayers().map { it.name }.filter { it.startsWith(builder.remainingLowerCase, ignoreCase = true) }.forEach(builder::suggest)
+    // 투명한 사람의 이름은 그 사람을 볼 수 있는 사람에게만 제안한다(core Vanish).
+    private val players = SuggestionProvider<CommandSourceStack> { ctx, builder ->
+        Vanish.visibleNames(ctx.source.sender).filter { it.startsWith(builder.remainingLowerCase, ignoreCase = true) }.forEach(builder::suggest)
         builder.buildFuture()
     }
 

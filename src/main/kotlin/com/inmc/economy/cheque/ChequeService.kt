@@ -50,7 +50,15 @@ class ChequeService(private val eco: Eco) {
                 .isSuccess
             player.scheduler.run(eco.plugin, {
                 if (ok) {
-                    for (left in player.inventory.addItem(item(def, cheque)).values) player.world.dropItemNaturally(player.location, left)
+                    // 가방이 차면 우편으로(창구가 없거나 거절하면 발밑에 — 둘 다로는 안 간다, 2026-10-10).
+                    val over = player.inventory.addItem(item(def, cheque)).values.toList()
+                    if (over.isNotEmpty()) {
+                        if (kr.inmc.core.integration.Mail.send(player.uniqueId, eco.plugin.name, Text.plain(def.name) + " 수표", over)) {
+                            eco.messages.send(player, "overflow-mailed", Ph.of().currency(def.name))
+                        } else {
+                            for (left in over) player.world.dropItemNaturally(player.location, left)
+                        }
+                    }
                     eco.messages.send(player, "cheque-issued", Ph.of().currency(def.name).amount(def.format(amount)))
                     if (fee > 0) eco.messages.send(player, "fee-charged", Ph.of().currency(def.name).amount(def.format(fee)))
                 } else {

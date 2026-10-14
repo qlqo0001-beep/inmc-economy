@@ -3,7 +3,9 @@ package com.inmc.economy.currency
 import com.inmc.economy.Eco
 import com.inmc.economy.store.Change
 import com.inmc.economy.util.Ph
+import kr.inmc.core.integration.Mail
 import kr.inmc.core.item.StoredItem
+import kr.inmc.core.util.Text
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -58,18 +60,21 @@ class ItemCurrencies(private val eco: Eco) {
         return true
     }
 
-    /** 가방에 넣는다. 가득 차면 발밑에. 접속하지 않았으면 다음 접속 때. */
+    /** 가방에 넣는다. 가득 차면 우편으로(창구가 없으면 발밑에 — [hand]). 접속하지 않았으면 다음 접속 때. */
     fun give(player: OfflinePlayer, def: CurrencyDef, amount: Long, reason: String): Boolean {
         if (amount <= 0) return true
         val spec = def.item ?: return false
         val online = player.player
         when {
             online != null && owned(online) -> {
-                hand(online, spec, amount)
+                hand(online, def, spec, amount)
                 ledger(online.uniqueId, def, amount, count(online, def), reason)
             }
             online != null -> {
-                online.scheduler.run(eco.plugin, { hand(online, spec, amount) }, null)
+                online.scheduler.run(eco.plugin, { hand(online, def, spec, amount) }, {
+                    // 그 사이 나갔다 — 다음 접속 때 준다(잃지 않게).
+                    eco.db.run("받을 실물 화폐") { eco.db.addPending(eco.db.local, online.uniqueId, def.id, amount) }
+                })
                 ledger(online.uniqueId, def, amount, 0, reason)
             }
             else -> {
@@ -91,7 +96,7 @@ class ItemCurrencies(private val eco: Eco) {
         remove(player, spec, moving, legacy[def.id])
         if (eco.accounts.add(player.uniqueId, def, moving, "bank:deposit") == null) {
             // 한도에 걸렸다 — 뺀 것을 돌려준다.
-            hand(player, spec, moving)
+            hand(player, def, spec, moving)
             return 0
         }
         return moving
@@ -102,7 +107,7 @@ class ItemCurrencies(private val eco: Eco) {
         val spec = def.item ?: return false
         if (amount <= 0) return false
         if (eco.accounts.add(player.uniqueId, def, -amount, "bank:withdraw") == null) return false
-        hand(player, spec, amount)
+        hand(player, def, spec, amount)
         return true
     }
 
@@ -121,7 +126,7 @@ class ItemCurrencies(private val eco: Eco) {
                         eco.db.run("받을 실물 화폐 되돌리기") { eco.db.addPending(eco.db.local, id, row.currency, row.amount) }
                         continue
                     }
-                    hand(player, spec, row.amount)
+                    hand(player, def, spec, row.amount)
                     eco.messages.send(player, "pending-delivered", Ph.of().currency(def.name).amount(def.format(row.amount)))
                 }
             }, {
@@ -131,17 +136,27 @@ class ItemCurrencies(private val eco: Eco) {
         }
     }
 
-    /** 아이템을 만들어 가방에. 한 번에 최대 겹침만큼씩, 넘치면 발밑에. */
-    fun hand(player: Player, spec: StoredItem, amount: Long) {
+    /**
+     * 아이템을 만들어 가방에. 한 번에 최대 겹침만큼씩. 넘친 것은 우편 창구(core [Mail])가 있으면 우편으로 한 통,
+     * 없거나 거절하면 발밑에(2026-10-10 — 둘 다로는 안 간다).
+     */
+    fun hand(player: Player, def: CurrencyDef, spec: StoredItem, amount: Long) {
         val sample = eco.resolver.create(spec, 1) ?: return
         val stack = sample.maxStackSize.coerceAtLeast(1)
+        val overflow = ArrayList<org.bukkit.inventory.ItemStack>()
         var left = amount
         while (left > 0) {
             val size = minOf(left, stack.toLong()).toInt()
             val item = sample.clone().also { it.amount = size }
-            for (overflow in player.inventory.addItem(item).values) player.world.dropItemNaturally(player.location, overflow)
+            overflow += player.inventory.addItem(item).values
             left -= size
         }
+        if (overflow.isEmpty()) return
+        if (Mail.send(player.uniqueId, eco.plugin.name, Text.plain(def.name) + " 지급", overflow)) {
+            eco.messages.send(player, "overflow-mailed", Ph.of().currency(def.name))
+            return
+        }
+        for (rest in overflow) player.world.dropItemNaturally(player.location, rest)
     }
 
     private fun remove(player: Player, spec: StoredItem, amount: Long, old: StoredItem? = null) {

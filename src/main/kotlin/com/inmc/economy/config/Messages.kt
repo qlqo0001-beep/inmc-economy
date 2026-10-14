@@ -58,6 +58,7 @@ class Messages(values: Map<String, String>) : MessageCatalog<Ph>(values, DEFAULT
             "bank-nothing" to "<yellow>입금할 {currency}<yellow> 이(가) 가방에 없거나 최대 금액입니다.</yellow>",
             "bank-withdrew" to "<green>{currency}<green> <white>{amount}</white> 을(를) 꺼냈습니다. 잔고 <white>{balance}</white></green>",
             "not-bank" to "<red>{currency}<red> 은(는) 은행형 실물 화폐가 아닙니다.</red>",
+            "overflow-mailed" to "<yellow>가방이 차서 들어가지 않은 {currency}<yellow> 은(는) 우편으로 보냈습니다. /우편 에서 받으세요.</yellow>",
             "pending-delivered" to "<green>접속하지 않은 동안 받은 {currency}<green> <white>{amount}</white> 을(를) 가방에 넣었습니다.</green>",
 
             // --- 수표 ---------------------------------------------------------------

@@ -59,6 +59,19 @@ private class EcoExpansion(private val eco: Eco) : PlaceholderExpansion() {
 
     override fun persist(): Boolean = true
 
+    /**
+     * PAPI 의 목록(`/papi info inmceco`) — 고정 이름과 지금 있는 화폐로 펼친 이름(순위는 1~10위). [onRequest] 의 키와 같아야 한다.
+     * 순위·top 은 순위표가 있는 화폐(`ranked` 이고 가방 속 개수형이 아닌 것 — [com.inmc.economy.currency.RankCache.refresh])만.
+     */
+    override fun getPlaceholders(): List<String> {
+        val default = eco.currencies.default()
+        val keys = EcoPlaceholders.keys(
+            eco.currencies.all().map { it.id to (it.ranked && !it.inventory) },
+            default = default?.let { it.ranked && !it.inventory },
+        )
+        return keys.map { "%inmceco_$it%" }
+    }
+
     override fun onRequest(player: OfflinePlayer?, params: String): String? {
         val lower = params.lowercase()
         if (lower.startsWith("top_")) return top(lower.removePrefix("top_"))
@@ -89,13 +102,10 @@ private class EcoExpansion(private val eco: Eco) : PlaceholderExpansion() {
         return eco.ranks.position(def.id, player.uniqueId)?.toString() ?: ""
     }
 
-    /** `<화폐>_<n>_name|amount|formatted`. 화폐 id 에 밑줄이 들어갈 수 있어 뒤에서부터 자른다. */
+    /** `<화폐>_<n>_name|amount|formatted`. */
     private fun top(rest: String): String {
-        val parts = rest.split('_')
-        if (parts.size < 3) return ""
-        val field = parts.last()
-        val position = parts[parts.size - 2].toIntOrNull() ?: return ""
-        val def = eco.currency(parts.dropLast(2).joinToString("_")) ?: return ""
+        val (currency, position, field) = EcoPlaceholders.top(rest) ?: return ""
+        val def = eco.currency(currency) ?: return ""
         val entry = eco.ranks.top(def.id).getOrNull(position - 1) ?: return ""
         return when (field) {
             "name" -> eco.nameOf(entry.player)
@@ -103,5 +113,39 @@ private class EcoExpansion(private val eco: Eco) : PlaceholderExpansion() {
             "formatted" -> def.format(entry.amount)
             else -> ""
         }
+    }
+}
+
+/** 키 목록과 top 키 풀기 — PlaceholderAPI 없이 시험하려고([EcoExpansion] 은 PAPI 가 있어야 적재된다) 밖에 둔다. */
+internal object EcoPlaceholders {
+
+    const val TOP_SIZE = 10
+
+    /**
+     * `%inmceco_` 와 `%` 를 뺀 키들. [currencies] 는 (화폐 id, 순위표가 있나). [default] 는 기본 화폐의 순위표 유무 — 기본 화폐가 없으면 null
+     * (그때 `balance`·`formatted`·`rank` 는 빈 값이라 싣지 않는다).
+     */
+    fun keys(currencies: List<Pair<String, Boolean>>, default: Boolean?): List<String> {
+        val keys = mutableListOf<String>()
+        if (default != null) {
+            keys += listOf("balance", "formatted")
+            if (default) keys += "rank"
+        }
+        for ((raw, ranked) in currencies) {
+            val id = raw.lowercase()
+            keys += listOf("balance_$id", "formatted_$id")
+            if (!ranked) continue
+            keys += "rank_$id"
+            for (n in 1..TOP_SIZE) keys += listOf("top_${id}_${n}_name", "top_${id}_${n}_amount", "top_${id}_${n}_formatted")
+        }
+        return keys
+    }
+
+    /** `top_` 뒤의 `<화폐>_<n>_<칸>` 을 (화폐, n, 칸)으로. 화폐 id 에 밑줄이 들어갈 수 있어 뒤에서부터 자른다. */
+    fun top(rest: String): Triple<String, Int, String>? {
+        val parts = rest.split('_')
+        if (parts.size < 3) return null
+        val position = parts[parts.size - 2].toIntOrNull() ?: return null
+        return Triple(parts.dropLast(2).joinToString("_"), position, parts.last())
     }
 }
